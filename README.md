@@ -29,7 +29,7 @@ API будет доступно по адресу `http://<host address>/api/`.
 - Склонируйте репозиторий с GitHub и перейдите в папку проекта, где расположен файл docker-compose.yml:
 ```
 git clone git@github.com:KostKH/referral_app.git
-cd posts_app/infra_referral_app
+cd referral_app/infra_referral_app
 ```
 - Проверьте, что на машине / сервере установлены `docker` и `docker compose`
 
