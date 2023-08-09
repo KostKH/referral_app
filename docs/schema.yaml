@@ -1,0 +1,308 @@
+openapi: 3.0.1
+info:
+  title: Документация для ReferralApp API
+  version: "1.0.0"
+
+paths:
+  /api/users/:
+    get:
+      tags:
+        - Пользователи
+      operationId: Список пользователей
+      description: ''
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+                description: 'Список пользователей'
+
+  /api/users/{userId}/:
+    get:
+      tags:
+        - Пользователи
+      operationId: Детальные данные о пользователе {userId}
+      description: 'Выводятся данные пользователя и список телефонов пользователей, которые ввели у себя инвайт-код данного пользователя'
+      parameters:
+        - name: userId
+          in: path
+          description: id пользователя
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      security:
+        - Token: []
+      operationId: 'Изменение данных пользователя'
+      description: 'Доступно только авторизованному пользователю'
+      parameters:
+        - name: userId
+          in: path
+          description: id пользователя
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: 'Данные пользователя изменены'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+      tags:
+        - Пользователи
+
+
+  /api/auth/registration/:
+    post:
+      operationId: Регистрация пользователя
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPhone'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBrief'
+          description: 'Пользователь успешно создан'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      tags:
+        - Регистрация и верификация
+
+  /api/auth/verification/:
+    post:
+      operationId: 'Верификация и получение токена авторизации'
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: 'Вход прошел успешно'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      tags:
+        - Регистрация и верификация
+  
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          readOnly: True
+        phone:
+          type: integer
+          description: Номер телефона в диапазоне от 71000000000 до 79999999999.
+          example: 79993332211
+          readOnly: True
+        first_name:
+          type: string
+          description: Имя пользователя
+          example: Иван
+        last_name:
+          type: string
+          description: Фамилия пользователя
+          example: Иванов
+        email:
+          type: string
+          description: Адрес электронной почты
+          example: aaa@bbb.ccc
+        invite_code:
+          type: string
+          description: Собственный 6-значный инвайт-код пользователя.
+          example: aB1C23
+          readOnly: True
+        granted_code:
+          type: string
+          description: Инвайт-код, полученный от другого пользователя (6-значный).
+          example: aB1C24
+  
+    UserBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        phone:
+          type: integer
+          description: Номер телефона в диапазоне от 71000000000 до 79999999999.
+          example: 79993332211
+  
+    UserDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        phone:
+          type: integer
+          description: Номер телефона в диапазоне от 71000000000 до 79999999999.
+          example: 79993332211
+        first_name:
+          type: string
+          description: Имя пользователя
+          example: Иван
+        last_name:
+          type: string
+          description: Фамилия пользователя
+          example: Иванов
+        email:
+          type: string
+          description: Адрес электронной почты
+          example: aaa@bbb.ccc
+        invite_code:
+          type: string
+          description: Собственный 6-значный инвайт-код пользователя.
+          example: aB1C23
+        granted_code:
+          type: string
+          description: Инвайт-код, полученный от другого пользователя.
+          example: aB1C24
+        code_applicants:
+          type: array
+          description: Список телефоно пользователей, которые ввели инвайт-код данного пользоваателя.
+          items:
+            $ref: '#/components/schemas/UserPhone'
+
+    UserPhone:
+      type: object
+      properties:
+        phone:
+          type: integer
+          description: Номер телефона в диапазоне от 71000000000 до 79999999999.
+          example: 79993332211
+
+    UserAuth:
+      type: object
+      properties:
+        phone:
+          type: integer
+          description: Номер телефона в диапазоне от 71000000000 до 79999999999.
+          example: 79993332211
+        verification_code:
+          type: string
+          description: Полученный на телефон 4-значный код, состоящий из цифр.
+          example: '4321'
+
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+          example: 0d68595e7adc9a4547ec9fbec7b0751ca9701acd
+
+    NotFound:
+      description: Объект не найден
+      type: object
+      properties:
+        detail:
+          description: 'Описание ошибки'
+          example: "Страница не найдена"
+          type: string
+
+    BadRequest:
+      description: BAD_REQUEST
+      type: object
+      properties:
+        field_name1:
+          description: 'Описание ошибок'
+          example: [Ошибка1, Ошибка2]
+          type: array
+        field_name2:
+          description: 'Описание ошибок'
+          example: [Ошибка1, Ошибка2]
+          type: array
+
+    AuthenticationError:
+      description: Пользователь не авторизован
+      type: object
+      properties:
+        detail:
+          description: 'Описание ошибки'
+          example: "Учетные данные не были предоставлены."
+          type: string
+
+    ForbiddenAction:
+      description: Операция запрещена
+      type: object
+      properties:
+        detail:
+          description: 'Описание ошибки'
+          example: "Изменение чужого контента запрещено!"
+          type: string
+
+  responses:
+    NotFound:
+      description: Объект не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+
+    BadRequest:
+      description: Ошибка в теле запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+
+    AuthenticationError:
+      description: Пользователь не авторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthenticationError'
+
+    ForbiddenAction:
+      description: Операция запрещена
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ForbiddenAction'
+
+  securitySchemes:
+    Token:
+      description: 'Авторизация по токену. <br>
+      Запрос от имени пользователя должен выполняться с заголовком "Authorization: token TOKENVALUE"'
+      type: http
+      scheme: token

@@ -1,0 +1,73 @@
+version: '3.3'
+
+services:
+  db:
+    image: postgres:14.0-alpine
+    volumes:
+      - referral_db:/var/lib/postgresql/data/
+    networks:
+      - referral_network
+    env_file:
+      - ./.env
+
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbitmq
+    restart: always
+    volumes:
+      - rabbit_value:/var/lib/rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    env_file:
+      - ./.env
+    networks:
+      - referral_network
+  
+  celery:
+    restart: always
+    image: kostkh/referral_app:v1.0.0
+    command: celery -A referral_app worker -l info
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - referral_network
+
+  app:
+    image: kostkh/referral_app:v1.0.0
+    restart: always
+    expose:
+      - 8000
+    networks:
+      - referral_network
+    volumes:
+      - static:/app/static/
+    depends_on:
+      - db
+      - celery
+    env_file:
+      - ./.env
+
+  nginx:
+    image: nginx:1.25.0
+    networks:
+      - referral_network
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../docs/:/usr/share/nginx/html/docs/
+      - static:/var/html/static/
+    depends_on:
+      - app
+
+volumes:
+  static:
+  referral_db:
+  rabbit_value:
+
+networks:
+  referral_network:
