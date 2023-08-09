@@ -48,7 +48,7 @@ paths:
       security:
         - Token: []
       operationId: 'Изменение данных пользователя'
-      description: 'Доступно только авторизованному пользователю'
+      description: 'Доступно только авторизованному пользователю. Изменять можно только собственные данные.'
       parameters:
         - name: userId
           in: path
@@ -71,7 +71,7 @@ paths:
           description: 'Данные пользователя изменены'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
+        '403':
           $ref: '#/components/responses/AuthenticationError'
       tags:
         - Пользователи
@@ -79,8 +79,8 @@ paths:
 
   /api/auth/registration/:
     post:
-      operationId: Регистрация пользователя
-      description: ''
+      operationId: Регистрация пользователя и вход.
+      description: 'В случае успешной регистрации на указанный в данных телефон высылается СМС-код.'
       parameters: []
       requestBody:
         content:
